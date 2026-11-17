@@ -24,6 +24,17 @@ function toTab(tabId: number, message: ContentMessage): void {
   chrome.tabs.sendMessage(tabId, message).catch(() => {});
 }
 
+async function commandToTab(tabId: number, message: ContentMessage): Promise<void> {
+  try {
+    await chrome.tabs.sendMessage(tabId, message);
+  } catch {
+    // Tabs opened before the extension was installed or reloaded have no live content script.
+    await chrome.scripting.insertCSS({ target: { tabId }, files: ["content.css"] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+    await chrome.tabs.sendMessage(tabId, message);
+  }
+}
+
 async function toOffscreen(message: OffscreenMessage): Promise<Reply> {
   return chrome.runtime.sendMessage(message);
 }
@@ -56,7 +67,7 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
 });
 
 chrome.action.onClicked.addListener((tab) => {
-  if (tab.id !== undefined) toTab(tab.id, { type: "command/open" });
+  if (tab.id !== undefined) commandToTab(tab.id, { type: "command/open" }).catch(() => {});
 });
 
 const COMMANDS: Record<string, ContentMessage> = {
@@ -66,7 +77,7 @@ const COMMANDS: Record<string, ContentMessage> = {
 
 chrome.commands.onCommand.addListener((command, tab) => {
   const message = COMMANDS[command];
-  if (message && tab?.id !== undefined) toTab(tab.id, message);
+  if (message && tab?.id !== undefined) commandToTab(tab.id, message).catch(() => {});
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
