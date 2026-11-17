@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clipperzinho settings</title>
+    <link rel="icon" href="icons/icon-48.png" />
+    <link rel="stylesheet" href="notes.css" />
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Settings</h1>
+      <a class="button" href="notes.html">Notes and highlights</a>
+    </header>
+    <main>
+      <section aria-labelledby="reading-heading">
+        <h2 id="reading-heading">Reading</h2>
+        <label class="setting">
+          <span>Voice</span>
+          <select id="voice"></select>
+        </label>
+        <label class="setting">
+          <span>Speed</span>
+          <span class="range"><input id="rate" type="range" /><output id="rate-value"></output></span>
+        </label>
+        <label class="setting">
+          <span>Follow along<small>Scroll the page to keep the spoken sentence in view.</small></span>
+          <input id="follow" type="checkbox" />
+        </label>
+      </section>
+      <section aria-labelledby="shortcuts-heading">
+        <h2 id="shortcuts-heading">Shortcuts</h2>
+        <dl id="shortcuts"></dl>
+        <p class="hint">
+          The first two are set in Chrome. The others work while the command center or the reading bar is on screen.
+        </p>
+        <button id="change-shortcuts" type="button">Change shortcuts</button>
+      </section>
+    </main>
+    <script type="module" src="settings.js"></script>
+  </body>
+</html>

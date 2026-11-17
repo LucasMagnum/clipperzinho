@@ -12,8 +12,9 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Open Clipperzinho notes"
+    "default_title": "Open Clipperzinho"
   },
+  "options_page": "settings.html",
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -32,6 +33,10 @@
   "cross_origin_embedder_policy": { "value": "require-corp" },
   "cross_origin_opener_policy": { "value": "same-origin" },
   "commands": {
+    "open-command-center": {
+      "suggested_key": { "default": "Alt+Shift+C" },
+      "description": "Open the command center"
+    },
     "toggle-reading": {
       "suggested_key": { "default": "Alt+Shift+R" },
       "description": "Play or pause reading"

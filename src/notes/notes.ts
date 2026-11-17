@@ -1,3 +1,4 @@
+import { removeHighlight } from "../shared/highlightIndex";
 import { notesToMarkdown } from "../shared/markdown";
 import { deleteNote, listNotes, updateNoteText, type Note } from "../shared/notesStore";
 
@@ -33,7 +34,12 @@ function card(note: Note): HTMLLIElement {
     viewer.showModal();
   });
 
-  const text = element("textarea", { value: note.note, ariaLabel: "Note" });
+  const isHighlight = note.kind === "highlight";
+  const text = element("textarea", {
+    value: note.note,
+    ariaLabel: "Note",
+    placeholder: isHighlight ? "Highlight — add a note" : "",
+  });
   text.addEventListener("change", async () => {
     await updateNoteText(note.id, text.value);
     note.note = text.value;
@@ -43,6 +49,7 @@ function card(note: Note): HTMLLIElement {
   remove.addEventListener("click", async () => {
     if (!confirm("Delete this note and its snapshot?")) return;
     await deleteNote(note.id);
+    if (isHighlight) await removeHighlight(note.url, note.excerpt);
     notes = notes.filter((other) => other.id !== note.id);
     render();
   });
@@ -67,7 +74,7 @@ function render(): void {
   empty.hidden = visible.length > 0;
   empty.textContent = notes.length
     ? "No notes match that search."
-    : "No notes yet. Open Clipperzinho on any page and use the pencil button to save one.";
+    : "Nothing saved yet. Open Clipperzinho on any page to take a note or highlight a sentence.";
   exportButton.disabled = notes.length === 0;
 }
 

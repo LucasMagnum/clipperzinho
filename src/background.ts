@@ -1,4 +1,5 @@
 import type { BackgroundMessage, ContentMessage, OffscreenMessage, Reply } from "./shared/messages";
+import { addHighlight } from "./shared/highlightIndex";
 import { addNote } from "./shared/notesStore";
 
 let creatingOffscreen: Promise<void> | undefined;
@@ -32,13 +33,14 @@ async function handle(message: BackgroundMessage, sender: chrome.runtime.Message
     case "tts/event":
       toTab(message.tabId, message.event);
       return { ok: true };
-    case "notes/open":
-      await chrome.tabs.create({ url: chrome.runtime.getURL("notes.html") });
+    case "settings/open":
+      await chrome.runtime.openOptionsPage();
       return { ok: true };
     case "note/save": {
       const { target: _target, type: _type, ...draft } = message;
       const screenshot = await chrome.tabs.captureVisibleTab(sender.tab!.windowId, { format: "jpeg", quality: 85 });
       await addNote(draft, screenshot);
+      if (draft.kind === "highlight") await addHighlight(draft.url, draft.excerpt);
       return { ok: true };
     }
     default:
@@ -53,12 +55,18 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
   return true;
 });
 
-chrome.action.onClicked.addListener(() => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("notes.html") });
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id !== undefined) toTab(tab.id, { type: "command/open" });
 });
 
+const COMMANDS: Record<string, ContentMessage> = {
+  "toggle-reading": { type: "command/toggle" },
+  "open-command-center": { type: "command/open" },
+};
+
 chrome.commands.onCommand.addListener((command, tab) => {
-  if (command === "toggle-reading" && tab?.id !== undefined) toTab(tab.id, { type: "command/toggle" });
+  const message = COMMANDS[command];
+  if (message && tab?.id !== undefined) toTab(tab.id, message);
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {

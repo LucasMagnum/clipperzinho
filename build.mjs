@@ -9,7 +9,7 @@ const shared = {
   outdir,
   platform: "browser",
   target: "chrome128",
-  loader: { ".css": "text", ".svg": "text" },
+  loader: { ".css": "text" },
   logLevel: "info",
 };
 
@@ -25,6 +25,7 @@ await Promise.all([
       offscreen: "src/offscreen/offscreen.ts",
       synthesizer: "src/offscreen/synthesizer.ts",
       notes: "src/notes/notes.ts",
+      settings: "src/settings/settings.ts",
     },
   }),
   // Content scripts cannot be ES modules.
@@ -33,6 +34,8 @@ await Promise.all([
   cp("src/offscreen/offscreen.html", `${outdir}/offscreen.html`),
   cp("src/notes/notes.html", `${outdir}/notes.html`),
   cp("src/notes/notes.css", `${outdir}/notes.css`),
+  cp("src/settings/settings.html", `${outdir}/settings.html`),
+  cp("src/settings/settings.css", `${outdir}/settings.css`),
   cp("src/content/page.css", `${outdir}/content.css`),
   cp("src/assets/icons", `${outdir}/icons`, { recursive: true }),
   // MV3 forbids remote code, so the ONNX runtime ships inside the extension.
