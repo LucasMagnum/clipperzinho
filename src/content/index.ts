@@ -73,7 +73,7 @@ async function restoreSavedHighlights(): Promise<void> {
   }
 }
 
-async function main(): Promise<void> {
+async function main(): Promise<(message: ContentMessage) => void> {
   const settings = await loadSettings();
   let widget: Widget;
   let view: ReaderView = { kind: "idle" };
@@ -198,12 +198,6 @@ async function main(): Promise<void> {
     { capture: true },
   );
 
-  chrome.runtime.onMessage.addListener((message: ContentMessage) => {
-    if (message.type === "command/open") widget.centerOpen ? closeCenter() : openCenter();
-    else if (message.type === "command/toggle") toggleReading();
-    else reader.handle(message);
-  });
-
   chrome.storage.onChanged.addListener((changes) => {
     const changed = <K extends keyof Settings>(key: K): Settings[K] | undefined =>
       changes[key] && changes[key].newValue !== settings[key] ? (changes[key].newValue as Settings[K]) : undefined;
@@ -219,6 +213,18 @@ async function main(): Promise<void> {
   addEventListener("pagehide", () => reader.stop());
 
   void restoreSavedHighlights();
+
+  return (message) => {
+    if (message.type === "command/open") widget.centerOpen ? closeCenter() : openCenter();
+    else if (message.type === "command/toggle") toggleReading();
+    else reader.handle(message);
+  };
 }
 
-if (!document.querySelector(WIDGET_TAG)) void main();
+// A widget already on the page belongs to a copy of this script orphaned by an extension reload or update.
+document.querySelector(WIDGET_TAG)?.remove();
+const ready = main();
+// Registered before main settles, so a command sent right after injection is not lost.
+chrome.runtime.onMessage.addListener((message: ContentMessage) => {
+  void ready.then((handle) => handle(message));
+});

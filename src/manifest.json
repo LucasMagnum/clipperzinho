@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "A little assistant that reads pages aloud with a local voice model, highlights as it goes, and keeps your notes.",
   "minimum_chrome_version": "128",
-  "permissions": ["offscreen", "storage", "unlimitedStorage"],
+  "permissions": ["offscreen", "scripting", "storage", "unlimitedStorage"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "icons/icon-16.png",
