@@ -1,0 +1,13 @@
+::highlight(clipperzinho-sentence) {
+  background-color: rgb(255 214 64 / 0.38);
+}
+
+::highlight(clipperzinho-word) {
+  background-color: #ffb020;
+  color: #1b1b1f;
+}
+
+html.clipperzinho-picking,
+html.clipperzinho-picking * {
+  cursor: crosshair !important;
+}
