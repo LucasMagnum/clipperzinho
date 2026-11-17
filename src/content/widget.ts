@@ -48,6 +48,7 @@ const POINTER_OFFSET = 12;
 const ABOVE_BAR = 88;
 const METER_SEGMENTS = 10;
 const FLASH_MS = 2200;
+const NOT_DRAGGABLE = "button, input, textarea, label, .voices";
 
 const filled = (path: string) => `<svg viewBox="0 0 24 24"><path d="${path}"/></svg>`;
 const line = (body: string) => `<svg class="line" viewBox="0 0 24 24">${body}</svg>`;
@@ -162,6 +163,7 @@ export function createWidget(settings: Settings, handlers: WidgetHandlers): Widg
   const noteSubmit = find<HTMLButtonElement>("[type='submit']");
 
   let anchor: Anchor;
+  let dragged: Point | undefined;
   let view: View = "main";
   let noteReturnsToMain = false;
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
@@ -172,8 +174,9 @@ export function createWidget(settings: Settings, handlers: WidgetHandlers): Widg
     // Layout size, because the bounding rect is scaled while the open animation runs.
     const { offsetWidth: width, offsetHeight: height } = center;
     const centered = (innerWidth - width) / 2;
-    const [left, top] =
-      anchor === "bar"
+    const [left, top] = dragged
+      ? [dragged.x, dragged.y]
+      : anchor === "bar"
         ? [centered, innerHeight - ABOVE_BAR - height]
         : anchor
           ? [anchor.x + POINTER_OFFSET, anchor.y + POINTER_OFFSET]
@@ -190,6 +193,7 @@ export function createWidget(settings: Settings, handlers: WidgetHandlers): Widg
 
   const closeCenter = () => {
     center.hidden = true;
+    dragged = undefined;
     if (shadow.activeElement instanceof HTMLElement) shadow.activeElement.blur();
   };
 
@@ -267,6 +271,27 @@ export function createWidget(settings: Settings, handlers: WidgetHandlers): Widg
     }
     const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
     if (action) actions[action]?.();
+  });
+
+  center.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || (event.target as Element).closest(NOT_DRAGGABLE)) return;
+    const grabX = event.clientX - center.offsetLeft;
+    const grabY = event.clientY - center.offsetTop;
+    const move = (moved: PointerEvent) => {
+      dragged = { x: moved.clientX - grabX, y: moved.clientY - grabY };
+      place();
+    };
+    center.setPointerCapture(event.pointerId);
+    center.classList.add("dragging");
+    center.addEventListener("pointermove", move);
+    center.addEventListener(
+      "lostpointercapture",
+      () => {
+        center.classList.remove("dragging");
+        center.removeEventListener("pointermove", move);
+      },
+      { once: true },
+    );
   });
 
   // Keeps the page's text selection alive so "read selection" and note excerpts still see it.

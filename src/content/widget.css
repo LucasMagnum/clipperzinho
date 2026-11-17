@@ -155,6 +155,12 @@ svg.line {
   padding: 8px;
   border-radius: 22px;
   background-image: radial-gradient(150px 120px at 100% 12%, var(--glow), transparent);
+  cursor: grab;
+  touch-action: none;
+}
+
+.center.dragging {
+  cursor: grabbing;
 }
 
 .hero {
@@ -201,7 +207,7 @@ kbd,
 }
 
 .speed {
-  cursor: default;
+  cursor: inherit;
   min-height: 52px;
   margin-top: 4px;
   padding-top: 4px;

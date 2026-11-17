@@ -13,7 +13,7 @@ Then open `chrome://extensions`, enable **Developer mode**, choose **Load unpack
 
 ## Use
 
-- Press `Alt+Shift+C` (or click the toolbar icon) to open the **command center** at the mouse pointer. Press it again, `Esc`, or click elsewhere to close it.
+- Press `Alt+Shift+C` (or click the toolbar icon) to open the **command center** at the mouse pointer. Drag it by its header or any empty area to move it. Press the shortcut again, `Esc`, or click elsewhere to close it.
 - **Play** reads the selection if there is one, otherwise from the sentence under the pointer, otherwise the whole page. The command center then collapses into a **reading bar** at the bottom of the page with play/pause, previous/next sentence, note, expand and close.
 - `Alt+Shift+R` plays or pauses without opening anything. Both shortcuts can be changed at `chrome://extensions/shortcuts`.
 - **Take a note** (`⌥N` / `Alt+N`) pauses and saves a note with a screenshot and the sentence being read.
