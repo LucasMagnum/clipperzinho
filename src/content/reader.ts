@@ -1,7 +1,15 @@
 import type { ContentRequest, Reply, TtsCommand, TtsEvent } from "../shared/messages";
 import { wordSpans } from "../shared/sentences";
+import type { Settings } from "../shared/settings";
 import { wordBoundaries, wordIndexAt } from "../shared/wordTimings";
-import { extractPage, extractSelection, rangeOf, selectedRange, sentenceIndexAt, type Sentence } from "./extract";
+import {
+  extractPage,
+  extractSelection,
+  rangeOf,
+  selectedRange,
+  sentenceIndexAtPoint,
+  type Sentence,
+} from "./extract";
 import { clearHighlights, showSentence, showWord } from "./highlighter";
 
 export type ReaderView =
@@ -15,6 +23,18 @@ export type ReaderView =
   | { kind: "interrupted" }
   | { kind: "error"; message: string };
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface StartTarget {
+  kind: "selection" | "cursor" | "page";
+  sentences: Sentence[];
+  index: number;
+  selectionText: string;
+}
+
 type SessionCommand = TtsCommand extends infer C ? (C extends unknown ? Omit<C, "sessionId"> : never) : never;
 
 export async function send(request: ContentRequest): Promise<Reply> {
@@ -23,6 +43,23 @@ export async function send(request: ContentRequest): Promise<Reply> {
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+export function findStartTarget(pointer: Point | undefined): StartTarget {
+  const selection = selectedRange();
+  if (selection) {
+    return {
+      kind: "selection",
+      sentences: extractSelection(selection),
+      index: 0,
+      selectionText: selection.toString(),
+    };
+  }
+  const sentences = extractPage();
+  const index = pointer ? sentenceIndexAtPoint(sentences, pointer.x, pointer.y) : -1;
+  return index === -1
+    ? { kind: "page", sentences, index: 0, selectionText: "" }
+    : { kind: "cursor", sentences, index, selectionText: "" };
 }
 
 export class Reader {
@@ -37,7 +74,7 @@ export class Reader {
   private shownWord = -1;
 
   constructor(
-    private readonly preferences: { rate: number; voice: string },
+    private readonly preferences: Settings,
     private readonly render: (view: ReaderView) => void,
   ) {}
 
@@ -45,27 +82,38 @@ export class Reader {
     return this.playing;
   }
 
-  get currentText(): string {
-    return this.sessionId ? (this.sentences[this.index]?.text ?? "") : "";
+  get hasSession(): boolean {
+    return this.sessionId !== undefined;
   }
 
-  toggle(): void {
+  get currentSentence(): Sentence | undefined {
+    return this.sessionId ? this.sentences[this.index] : undefined;
+  }
+
+  toggle(pointer: Point | undefined): void {
     if (this.playing) {
       this.pause();
       return;
     }
-    const selection = selectedRange();
-    const selectionText = selection?.toString() ?? "";
-    if (this.sessionId && (!selection || selectionText === this.selectionText)) {
+    const selectionText = selectedRange()?.toString() ?? "";
+    if (this.sessionId && (!selectionText || selectionText === this.selectionText)) {
       this.resume();
     } else {
-      void this.begin(selection ? extractSelection(selection) : extractPage(), 0, selectionText);
+      this.start(findStartTarget(pointer));
     }
   }
 
-  startAt(node: Node, offset: number): void {
-    const sentences = extractPage();
-    void this.begin(sentences, sentenceIndexAt(sentences, node, offset), "");
+  start(target: StartTarget): void {
+    if (target.sentences.length === 0) {
+      this.reset({ kind: "empty" });
+      return;
+    }
+    this.sentences = target.sentences;
+    // crypto.randomUUID is unavailable to content scripts on plain-http pages.
+    this.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this.selectionText = target.selectionText;
+    this.playing = true;
+    void this.load(target.index);
   }
 
   pause(): void {
@@ -101,8 +149,7 @@ export class Reader {
   }
 
   stop(): void {
-    if (!this.sessionId) return;
-    void this.command({ type: "tts/stop" });
+    if (this.sessionId) void this.command({ type: "tts/stop" });
     this.reset({ kind: "idle" });
   }
 
@@ -135,19 +182,6 @@ export class Reader {
         this.reset({ kind: "error", message: event.message });
         break;
     }
-  }
-
-  private async begin(sentences: Sentence[], index: number, selectionText: string): Promise<void> {
-    if (sentences.length === 0) {
-      this.render({ kind: "empty" });
-      return;
-    }
-    this.sentences = sentences;
-    // crypto.randomUUID is unavailable to content scripts on plain-http pages.
-    this.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    this.selectionText = selectionText;
-    this.playing = true;
-    await this.load(index);
   }
 
   private async load(index: number): Promise<void> {
@@ -187,7 +221,7 @@ export class Reader {
     this.boundaries = wordBoundaries(sentence.text, words);
     this.wordRanges = words.map(({ start, end }) => rangeOf(sentence, start, end));
     this.shownWord = -1;
-    showSentence(rangeOf(sentence));
+    showSentence(rangeOf(sentence), this.preferences.followAlong);
   }
 
   private showWordAt(time: number): void {

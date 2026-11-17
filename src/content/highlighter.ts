@@ -1,7 +1,10 @@
+const savedHighlight = new Highlight();
 const sentenceHighlight = new Highlight();
 const wordHighlight = new Highlight();
-wordHighlight.priority = 1;
+sentenceHighlight.priority = 1;
+wordHighlight.priority = 2;
 
+CSS.highlights.set("clipperzinho-saved", savedHighlight);
 CSS.highlights.set("clipperzinho-sentence", sentenceHighlight);
 CSS.highlights.set("clipperzinho-word", wordHighlight);
 
@@ -33,14 +36,18 @@ function reveal(range: Range): void {
   });
 }
 
-export function showSentence(range: Range | undefined): void {
+export function showSentence(range: Range | undefined, follow: boolean): void {
   replace(sentenceHighlight, range);
   replace(wordHighlight, undefined);
-  if (range) reveal(range);
+  if (range && follow) reveal(range);
 }
 
 export function showWord(range: Range | undefined): void {
   replace(wordHighlight, range);
+}
+
+export function markSaved(range: Range): void {
+  savedHighlight.add(range);
 }
 
 export function clearHighlights(): void {

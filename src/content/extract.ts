@@ -135,10 +135,17 @@ export function rangeOf(sentence: Sentence, start = 0, end = sentence.text.lengt
   }
 }
 
-export function sentenceIndexAt(sentences: Sentence[], node: Node, offset: number): number {
-  const index = sentences.findIndex((sentence) => {
-    const range = rangeOf(sentence);
-    return range !== undefined && range.comparePoint(node, offset) <= 0;
+/** Index of the sentence at or just after a viewport point, or -1 when the point is not over readable text. */
+export function sentenceIndexAtPoint(sentences: Sentence[], x: number, y: number): number {
+  const caret = document.caretPositionFromPoint(x, y);
+  if (!caret) return -1;
+  let checked: Block | undefined;
+  let containsCaret = false;
+  return sentences.findIndex((sentence) => {
+    if (sentence.block !== checked) {
+      checked = sentence.block;
+      containsCaret = checked.owners.includes(caret.offsetNode as Text);
+    }
+    return containsCaret && (rangeOf(sentence)?.comparePoint(caret.offsetNode, caret.offset) ?? 1) <= 0;
   });
-  return index === -1 ? 0 : index;
 }

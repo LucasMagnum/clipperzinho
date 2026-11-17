@@ -78,6 +78,10 @@ button {
   cursor: pointer;
 }
 
+header a {
+  color: var(--accent);
+}
+
 #export {
   border-color: var(--accent);
   background: var(--accent);

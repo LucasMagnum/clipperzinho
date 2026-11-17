@@ -1,9 +1,11 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
+import { withHighlight, withoutHighlight } from "../src/shared/highlightIndex";
 import { notesToMarkdown } from "../src/shared/markdown";
 import { addNote, deleteNote, listNotes, updateNoteText } from "../src/shared/notesStore";
 
 const draft = (note: string) => ({
+  kind: "note" as const,
   note,
   excerpt: "A sentence from the page.",
   url: "https://example.com/article",
@@ -27,6 +29,26 @@ describe("notesStore", () => {
 
   it("refuses to edit a note that was deleted", async () => {
     await expect(updateNoteText("missing", "text")).rejects.toThrow("no longer exists");
+  });
+});
+
+describe("highlight index", () => {
+  const url = "https://example.com/article";
+
+  it("groups highlights by page, ignoring the URL fragment", () => {
+    const index = withHighlight(withHighlight({}, `${url}#intro`, "First."), `${url}#end`, "Second.");
+    expect(index).toEqual({ [url]: ["First.", "Second."] });
+  });
+
+  it("does not store the same sentence twice", () => {
+    const index = withHighlight({}, url, "First.");
+    expect(withHighlight(index, url, "First.")).toBe(index);
+  });
+
+  it("drops the page entry when its last highlight is removed", () => {
+    const index = withHighlight(withHighlight({}, url, "First."), url, "Second.");
+    expect(withoutHighlight(index, url, "First.")).toEqual({ [url]: ["Second."] });
+    expect(withoutHighlight(withoutHighlight(index, url, "First."), url, "Second.")).toEqual({});
   });
 });
 

@@ -13,21 +13,23 @@ Then open `chrome://extensions`, enable **Developer mode**, choose **Load unpack
 
 ## Use
 
-- Click the mascot (bottom right, draggable) to open the controls.
-- **Play** reads the page; if text is selected, only the selection is read. `Alt+Shift+R` toggles play/pause.
-- **Previous / next** move one sentence. The **target** button lets you click a spot on the page to read from there.
-- **Speed** goes from 0.5× to 3× and applies immediately; **Voice** offers the 28 English Kokoro voices.
-- The **pencil** pauses reading and saves a note with a screenshot and the sentence being read. The **list** button (or the toolbar icon) opens the notes page, where notes can be searched, edited, deleted and exported to Markdown.
+- Press `Alt+Shift+C` (or click the toolbar icon) to open the **command center** at the mouse pointer. Press it again, `Esc`, or click elsewhere to close it.
+- **Play** reads the selection if there is one, otherwise from the sentence under the pointer, otherwise the whole page. The command center then collapses into a **reading bar** at the bottom of the page with play/pause, previous/next sentence, note, expand and close.
+- `Alt+Shift+R` plays or pauses without opening anything. Both shortcuts can be changed at `chrome://extensions/shortcuts`.
+- **Take a note** (`⌥N` / `Alt+N`) pauses and saves a note with a screenshot and the sentence being read.
+- **Highlight sentence** (`⌥H` / `Alt+H`) marks the sentence, saves it, and marks it again on later visits while the same text is on the page.
+- **Follow along** scrolls the page to the spoken sentence. **Speed** steps from 0.5× to 3×; **Voice** offers the 28 English Kokoro voices.
+- **All settings** opens the settings page, which links to the notes page where notes and highlights can be searched, edited, deleted and exported to Markdown.
 
 ## What runs where
 
 | Part | Role |
 |---|---|
-| `src/content/` | Mascot widget (Shadow DOM), text extraction, highlighting via the CSS Custom Highlight API |
+| `src/content/` | Command center and reading bar (Shadow DOM), text extraction, highlighting via the CSS Custom Highlight API |
 | `src/offscreen/offscreen.ts` | Sentence queue and audio playback |
 | `src/offscreen/synthesizer.ts` | Web Worker running Kokoro on WebGPU, or multi-threaded WASM when WebGPU is unavailable |
 | `src/background.ts` | Message routing, screenshots, notes storage |
-| `src/notes/` | Notes page |
+| `src/notes/`, `src/settings/` | Notes and settings pages |
 
 Speech is synthesized on this machine; page text is never sent anywhere. The only network access is the first play, which downloads the model (~330 MB) and the chosen voice (~0.5 MB) from Hugging Face into the browser cache.
 

@@ -34,7 +34,11 @@ export const VOICES = [
 const ACCENTS: Record<string, string> = { a: "American", b: "British" };
 const GENDERS: Record<string, string> = { f: "female", m: "male" };
 
-export function voiceLabel(id: string): string {
+export function voiceName(id: string): string {
   const name = id.slice(3);
-  return `${name[0]!.toUpperCase()}${name.slice(1)} · ${ACCENTS[id[0]!]} ${GENDERS[id[1]!]}`;
+  return `${name[0]!.toUpperCase()}${name.slice(1)}`;
+}
+
+export function voiceLabel(id: string): string {
+  return `${voiceName(id)} · ${ACCENTS[id[0]!]} ${GENDERS[id[1]!]}`;
 }

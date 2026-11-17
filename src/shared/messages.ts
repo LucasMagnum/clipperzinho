@@ -25,7 +25,10 @@ export type TtsEvent = { sessionId: string } & (
   | { type: "event/error"; message: string }
 );
 
+export type NoteKind = "note" | "highlight";
+
 export interface NoteDraft {
+  kind: NoteKind;
   note: string;
   excerpt: string;
   url: string;
@@ -35,7 +38,7 @@ export interface NoteDraft {
 export type ContentRequest =
   | TtsCommand
   | ({ type: "note/save" } & NoteDraft)
-  | { type: "notes/open" };
+  | { type: "settings/open" };
 
 export type BackgroundMessage = { target: "background" } & (
   | ContentRequest
@@ -47,7 +50,7 @@ export type OffscreenMessage = { target: "offscreen"; tabId: number } & (
   | { type: "tts/tab-closed" }
 );
 
-export type ContentMessage = TtsEvent | { type: "command/toggle" };
+export type ContentMessage = TtsEvent | { type: "command/toggle" } | { type: "command/open" };
 
 export interface Reply {
   ok: boolean;
