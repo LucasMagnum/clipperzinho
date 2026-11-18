@@ -38,7 +38,8 @@ export interface NoteDraft {
 export type ContentRequest =
   | TtsCommand
   | ({ type: "note/save" } & NoteDraft)
-  | { type: "settings/open" };
+  | { type: "settings/open" }
+  | { type: "pdf/open"; url: string };
 
 export type BackgroundMessage = { target: "background" } & (
   | ContentRequest

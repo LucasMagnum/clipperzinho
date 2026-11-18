@@ -16,6 +16,7 @@ Then open `chrome://extensions`, enable **Developer mode**, choose **Load unpack
 - Press `Alt+Shift+C` (or click the toolbar icon) to open the **command center** at the mouse pointer. Drag it by its header or any empty area to move it. Press the shortcut again, `Esc`, or click elsewhere to close it.
 - **Play** reads the selection if there is one, otherwise from the sentence under the pointer, otherwise the whole page. The command center then collapses into a **reading bar** at the bottom of the page with play/pause, previous/next sentence, note, expand and close.
 - `Alt+Shift+R` plays or pauses without opening anything. Both shortcuts can be changed at `chrome://extensions/shortcuts`.
+- On a **PDF**, either shortcut (or the toolbar icon) first reopens the file in Clipperzinho's own viewer, where everything above works the same. Local files need **Allow access to file URLs** enabled for the extension at `chrome://extensions`.
 - **Take a note** (`⌥N` / `Alt+N`) pauses and saves a note with a screenshot and the sentence being read.
 - **Highlight sentence** (`⌥H` / `Alt+H`) marks the sentence, saves it, and marks it again on later visits while the same text is on the page.
 - **Follow along** scrolls the page to the spoken sentence. **Speed** steps from 0.5× to 3×; **Voice** offers the 28 English Kokoro voices.
@@ -26,6 +27,7 @@ Then open `chrome://extensions`, enable **Developer mode**, choose **Load unpack
 | Part | Role |
 |---|---|
 | `src/content/` | Command center and reading bar (Shadow DOM), text extraction, highlighting via the CSS Custom Highlight API |
+| `src/pdf/` | PDF viewer built on [pdf.js](https://mozilla.github.io/pdf.js/) (Apache-2.0); `src/shared/pdfParagraphs.ts` turns its positioned lines back into paragraphs |
 | `src/offscreen/offscreen.ts` | Sentence queue and audio playback |
 | `src/offscreen/synthesizer.ts` | Web Worker running Kokoro on WebGPU, or multi-threaded WASM when WebGPU is unavailable |
 | `src/background.ts` | Message routing, screenshots, notes storage |
@@ -37,7 +39,8 @@ Speech is synthesized on this machine; page text is never sent anywhere. The onl
 
 - English only.
 - Sentence highlighting is exact; word highlighting is estimated from word lengths, because the model does not return word timings.
-- Reads DOM text, so Chrome's PDF viewer, canvas-rendered pages and `chrome://` pages are not supported.
+- Reads DOM text, so canvas-rendered pages and `chrome://` pages are not supported.
+- PDFs: scanned files without a text layer cannot be read (no OCR), running headers, footers and page numbers are read aloud, and PDFs embedded inside a web page are not picked up.
 
 ## Develop
 

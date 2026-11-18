@@ -47,6 +47,11 @@ async function handle(message: BackgroundMessage, sender: chrome.runtime.Message
     case "settings/open":
       await chrome.runtime.openOptionsPage();
       return { ok: true };
+    case "pdf/open":
+      await chrome.tabs.update(sender.tab!.id!, {
+        url: `${chrome.runtime.getURL("pdf.html")}?src=${encodeURIComponent(message.url)}`,
+      });
+      return { ok: true };
     case "note/save": {
       const { target: _target, type: _type, ...draft } = message;
       const screenshot = await chrome.tabs.captureVisibleTab(sender.tab!.windowId, { format: "jpeg", quality: 85 });

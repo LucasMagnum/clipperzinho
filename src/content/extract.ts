@@ -2,7 +2,7 @@ import { sentenceSpans } from "../shared/sentences";
 
 export const WIDGET_TAG = "clipperzinho-widget";
 
-interface Block {
+export interface Block {
   text: string;
   owners: Text[];
   offsets: number[];
@@ -14,6 +14,12 @@ export interface Sentence {
   start: number;
   end: number;
 }
+
+/** Blocks of the whole document, or of the part of it inside a range. */
+export type BlockSource = (within?: Range) => Block[];
+
+// Set where the DOM does not show how text flows: a PDF text layer positions every line on its own.
+let blockSource: BlockSource | undefined;
 
 const NEVER_READ = `script, style, noscript, template, svg, canvas, textarea, select, ${WIDGET_TAG}`;
 const PAGE_CHROME =
@@ -112,12 +118,16 @@ export function selectedRange(): Range | undefined {
   return selection.getRangeAt(0);
 }
 
+export function readBlocksFrom(source: BlockSource): void {
+  blockSource = source;
+}
+
 export function extractSelection(range: Range): Sentence[] {
-  return toSentences(collectBlocks(range.commonAncestorContainer, NEVER_READ, range));
+  return toSentences(blockSource?.(range) ?? collectBlocks(range.commonAncestorContainer, NEVER_READ, range));
 }
 
 export function extractPage(): Sentence[] {
-  return toSentences(collectBlocks(contentRoot(), `${NEVER_READ}, ${PAGE_CHROME}`));
+  return toSentences(blockSource?.() ?? collectBlocks(contentRoot(), `${NEVER_READ}, ${PAGE_CHROME}`));
 }
 
 /** Undefined when the page has changed underneath the sentence since it was extracted. */

@@ -3,6 +3,7 @@ import { cp, mkdir, rm } from "node:fs/promises";
 
 const outdir = "dist";
 const ortDist = "node_modules/@huggingface/transformers/dist";
+const pdfjs = "node_modules/pdfjs-dist";
 
 const shared = {
   bundle: true,
@@ -26,6 +27,7 @@ await Promise.all([
       synthesizer: "src/offscreen/synthesizer.ts",
       notes: "src/notes/notes.ts",
       settings: "src/settings/settings.ts",
+      pdf: "src/pdf/pdf.ts",
     },
   }),
   // Content scripts cannot be ES modules.
@@ -37,6 +39,12 @@ await Promise.all([
   cp("src/settings/settings.html", `${outdir}/settings.html`),
   cp("src/settings/settings.css", `${outdir}/settings.css`),
   cp("src/content/page.css", `${outdir}/content.css`),
+  cp("src/pdf/pdf.html", `${outdir}/pdf.html`),
+  cp("src/pdf/pdf.css", `${outdir}/pdf.css`),
+  cp(`${pdfjs}/build/pdf.worker.min.mjs`, `${outdir}/pdfjs/pdf.worker.mjs`),
+  ...["cmaps", "standard_fonts", "wasm", "iccs"].map((assets) =>
+    cp(`${pdfjs}/${assets}`, `${outdir}/pdfjs/${assets}`, { recursive: true }),
+  ),
   cp("src/assets/icons", `${outdir}/icons`, { recursive: true }),
   // MV3 forbids remote code, so the ONNX runtime ships inside the extension.
   cp(`${ortDist}/ort-wasm-simd-threaded.jsep.mjs`, `${outdir}/ort/ort-wasm-simd-threaded.jsep.mjs`),

@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  background: light-dark(#e9e9ed, #2a2a2e);
+  font: 14px/1.4 system-ui, sans-serif;
+}
+
+#status {
+  position: sticky;
+  top: 12px;
+  z-index: 2;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 12px auto 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: light-dark(#fff, #1b1b1f);
+  color: light-dark(#1b1b1f, #f4f4f6);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.2);
+}
+
+#pages {
+  --scale-factor: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0 200px;
+}
+
+.page {
+  --total-scale-factor: var(--scale-factor);
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  position: relative;
+  width: calc(var(--scale-factor) * var(--page-width));
+  height: calc(var(--scale-factor) * var(--page-height));
+  background: #fff;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+}
+
+.page canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The rules pdf.js needs to lay its text layer over the canvas, from pdfjs-dist/web/pdf_viewer.css. */
+.textLayer {
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  color-scheme: only light;
+  line-height: 1;
+  text-align: initial;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+}
+
+.textLayer :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.textLayer .markedContent {
+  display: contents;
+}
+
+.textLayer ::selection {
+  background: color-mix(in srgb, AccentColor, transparent 50%);
+  color: transparent;
+}
+
+/* The glyphs are drawn on the canvas underneath, so highlights here must stay see-through and leave the text layer's own text unpainted. */
+::highlight(clipperzinho-word) {
+  background-color: rgb(255 176 32 / 0.5);
+  color: transparent;
+}
